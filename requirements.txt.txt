@@ -1,0 +1,7 @@
+tkinter
+opencv-python
+Pillow
+os
+time
+PIL
+Pyautogui
