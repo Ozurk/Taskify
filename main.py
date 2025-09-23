@@ -1,213 +1,205 @@
-import pyautogui as pya
-import pyperclip
 import tkinter as tk
-from tkinter import ttk
-from PIL import ImageGrab  # Importing Pillow for clipboard image saving
-import os
+import pyautogui
+from PIL import Image, ImageTk, ImageGrab
 import time
-class Window(tk.Tk):
+import os
+
+class POItemSelectorApp:
+
+    sleep_time = 0.1
+    confidence = .79
+
     def __init__(self):
-        tk.Tk.__init__(self)
-        self.title("Asset Adder")
-        self.geometry("300x500")
+        self.root = tk.Tk()
+        self.root.title("PO Item Selector")
+        self.root.geometry("600x600")
 
-        self.department_label = tk.Label(self, text="Department")
-        self.department_label.pack()
-        self.department_name = ttk.Combobox(self, values=["Construction", "Project Management"])
-        self.department_name.pack()
+        main_frame = tk.Frame(self.root)
+        main_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
+        settings_frame = tk.Frame(self.root, relief=tk.RIDGE, borderwidth=2)
+        settings_frame.grid(row=0, column=1, padx=10, pady=10, sticky="ns")
 
-        self.asset_type_label = tk.Label(self, text="Cost Code Name")
-        self.asset_type_label.pack()
+        # Number of buttons slider
+        tk.Label(settings_frame, text="Number of Save Image Buttons").pack(pady=(10, 0))
+        self.button_count_var = tk.IntVar(value=4)
+        button_count_slider = tk.Scale(
+            settings_frame, from_=1, to=10, orient=tk.HORIZONTAL,
+            variable=self.button_count_var, command=self.on_button_count_change
+        )
+        button_count_slider.pack(pady=5, fill="x")
 
-        self.cost_codes = ["1st Rough"]
-        self.cost_code_entry = ttk.Combobox(self, values=self.cost_codes)
-        self.cost_code_entry.pack()
-        self.cost_code_entry.set(self.cost_codes[0])
+        # Confidence slider
+        tk.Label(settings_frame, text="Confidence").pack(pady=(10, 0))
+        self.confidence_var = tk.DoubleVar(value=self.confidence)
+        confidence_slider = tk.Scale(settings_frame, from_=0.5, to=1.0, resolution=0.01, orient=tk.HORIZONTAL, variable=self.confidence_var)
+        confidence_slider.pack(pady=5, fill="x")
 
-        self.copy_elipsis = tk.Button(self, text="copy (...)", command=self.save_elipsis)
-        self.copy_elipsis.pack()
+        # Speed (Sleep Time) slider
+        tk.Label(settings_frame, text="Speed (Sleep Time)").pack(pady=(10, 0))
+        self.sleep_time_var = tk.DoubleVar(value=self.sleep_time)
+        speed_slider = tk.Scale(settings_frame, from_=0.01, to=1.0, resolution=0.01, orient=tk.HORIZONTAL, variable=self.sleep_time_var)
+        speed_slider.pack(pady=5, fill="x")
 
-        self.copy_edit = tk.Button(self, text="copy (edit)", command=self.save_edit)
-        self.copy_edit.pack()
+        # Scroll distance slider
+        tk.Label(settings_frame, text="Scroll Distance").pack(pady=(10, 0))
+        self.scroll_distance_var = tk.IntVar(value=25)
+        scroll_slider = tk.Scale(settings_frame, from_=1, to=200, orient=tk.HORIZONTAL, variable=self.scroll_distance_var)
+        scroll_slider.pack(pady=5, fill="x")
 
-        self.copy_department_field = tk.Button(self, text="Copy department field", command=self.save_department_field)
-        self.copy_department_field.pack()
-    
-        self.copy_department_dropdown = tk.Button(self, text="Copy department dropdown", command=self.save_department_dropdown)
-        self.copy_department_dropdown.pack()    
+        tk.Button(settings_frame, text="Apply Settings", command=self.apply_settings).pack(pady=20)
 
-        self.copy_cost_code_field = tk.Button(self, text="Copy cost code field", command=self.save_cost_code_field)
-        self.copy_cost_code_field.pack()
+        # Create and place buttons in a grid
+        self.save_buttons = []
+        self.main_frame = main_frame
+        self.update_buttons(self.button_count_var.get(), main_frame)
 
-        self.copy_cost_code_dropdown = tk.Button(self, text="Copy cost code dropdown", command=self.save_cost_code_dropdown)
-        self.copy_cost_code_dropdown.pack()
+        execute_button = tk.Button(main_frame, text="Execute", command=self.execute_script)
+        execute_button.grid(row=11, column=0, columnspan=2, pady=20, sticky="ew")
 
-        self.button = tk.Button(self, text="Copy Save Button", command=self.save_save_button_SC)
-        self.button.pack()
+        for r in range(12):
+            main_frame.rowconfigure(r, weight=1)
+        for c in range(2):
+            main_frame.columnconfigure(c, weight=1)
 
-        self.save_add_assets_button = tk.Button(self, text="Save the department sort", command=self.save_sort)
-        self.save_add_assets_button.pack()
+        self.root.mainloop()
 
-        self.start_button = tk.Button(self, text="Start", command=self.start_program)
-        self.start_button.pack()
+    def on_button_count_change(self, event=None):
+        count = self.button_count_var.get()
+        self.update_buttons(count, self.main_frame)
 
-    def save_elipsis(self):
-        """Saves the clipboard image as a PNG file."""
-        try:
-            image = ImageGrab.grabclipboard()  # Get image from clipboard
-            if image:  # Check if clipboard contains an image
-                filename = "pics/elipsis.png"
-                image.save(filename, "PNG")
-                print(f"Image saved as {filename}")
-            else:
-                print("No image found in clipboard.")
-        except Exception as e:
-            print(f"Error saving image: {e}")
+    def update_buttons(self, count, main_frame):
+        # Clear existing buttons
+        for button in self.save_buttons:
+            button.button.destroy()
+            button.thumbnail_label.destroy()
+        self.save_buttons = []
+        # Create new buttons
+        for i in range(count):
+            row = i
+            col = 0
+            btn = ImageSaving_Button(f"Save Image{i+1}", main_frame, f"Image{i+1}.png", row=row, column=col)
+            self.save_buttons.append(btn)
 
-    def save_edit(self):
-        """Saves the clipboard image as a PNG file."""
-        try:
-            image = ImageGrab.grabclipboard()  # Get image from clipboard
-            if image:  # Check if clipboard contains an image
-                filename = "pics/edit.png"
-                image.save(filename, "PNG")
-                print(f"Image saved as {filename}")
-            else:
-                print("No image found in clipboard.")
-        except Exception as e:
-            print(f"Error saving image: {e}")
+    def apply_settings(self):
+        self.confidence = self.confidence_var.get()
+        self.sleep_time = self.sleep_time_var.get()
+        self.scroll_distance = self.scroll_distance_var.get()
+        print(f"Settings applied: confidence={self.confidence}, sleep_time={self.sleep_time}, scroll_distance={self.scroll_distance}")
 
-    def save_department_field(self):
-        """Saves the clipboard image as a PNG file."""
-        try:
-            image = ImageGrab.grabclipboard()  # Get image from clipboard
-            if image:  # Check if clipboard contains an image
-                filename = "pics/dpt.png"
-                image.save(filename, "PNG")
-                print(f"Image saved as {filename}")
-            else:
-                print("No image found in clipboard.")
-        except Exception as e:
-            print(f"Error saving image: {e}")
-
-    def save_save_button_SC(self):
-        """Saves the clipboard image as a PNG file."""
-        try:
-            image = ImageGrab.grabclipboard()  # Get image from clipboard
-            if image:  # Check if clipboard contains an image
-                filename = "pics/save.png"
-                image.save(filename, "PNG")
-                print(f"Image saved as {filename}")
-            else:
-                print("No image found in clipboard.")
-        except Exception as e:
-            print(e)
-    
-    def save_sort(self):
-        """Saves the clipboard image as a PNG file."""
-        try:
-            image = ImageGrab.grabclipboard()  # Get image from clipboard
-            if image:  # Check if clipboard contains an image
-                filename = "pics/sort.png"
-                image.save(filename, "PNG")
-                print(f"Image saved as {filename}")
-            else:
-                print("No image found in clipboard.")
-        except Exception as e:
-            print(f"Error saving image: {e}")
-    
-    def save_cost_code_field(self): 
-        """Saves the clipboard image as a PNG file."""
-        try:
-            image = ImageGrab.grabclipboard()  # Get image from clipboard
-            if image:  # Check if clipboard contains an image
-                filename = "pics/cost_code.png"
-                image.save(filename, "PNG")
-                print(f"Image saved as {filename}")
-            else:
-                print("No image found in clipboard.")
-        except Exception as e:
-            print(f"Error saving image: {e}")
-
-    def save_department_dropdown(self):
-        """Saves the clipboard image as a PNG file."""
-        try:
-            image = ImageGrab.grabclipboard()  # Get image from clipboard
-            if image:  # Check if clipboard contains an image
-                filename = "pics/dpt_dropdown.png"
-                image.save(filename, "PNG")
-                print(f"Image saved as {filename}")
-            else:
-                print("No image found in clipboard.")
-        except Exception as e:
-            print(f"Error saving image: {e}")
-    
-    def save_cost_code_dropdown(self):
-        """Saves the clipboard image as a PNG file."""
-        try:
-            image = ImageGrab.grabclipboard()  # Get image from clipboard
-            if image:  # Check if clipboard contains an image
-                filename = "pics/cost_code_dropdown.png"
-                image.save(filename, "PNG")
-                print(f"Image saved as {filename}")
-            else:
-                print("No image found in clipboard.")
-        except Exception as e:
-            print(f"Error saving image: {e}")
-
-    def start_program(self):
-        while True:
-            self.move_and_click_button('pics/sort.png')
-            time.sleep(1)
-            self.move_and_click_button('pics/elipsis.png')
-            time.sleep(.5)
-            self.move_and_click_button('pics/edit.png')
-            time.sleep(.5)
-            self.move_and_click_button('pics/dpt.png')
-            time.sleep(.5)
-            self.move_and_click_button('pics/dpt_dropdown.png')
-            time.sleep(.5)
-            self.move_and_click_button('pics/cost_code.png')
-            time.sleep(.5)
-            self.move_and_click_button('pics/cost_code_dropdown.png')
-            time.sleep(.25)
-            self.move_and_click_button('pics/save.png')
-            time.sleep(.5)
-
-
-    def move_and_click_button(self, img_path: str):
-        attempts = 0
-        button_coords = None  # Ensure initialization
-
-        while attempts < 10:  # Limit the number of attempts
-            try:
-                button_coords = pya.locateOnScreen(img_path, confidence=0.85)
-                if button_coords is not None:
-                    button_coords = pya.center(button_coords)
-                    pya.click(button_coords[0], button_coords[1])
-                    return  # Exit function after successful click
-
-            except pya.ImageNotFoundException:
-                pass  # Ignore exception and retry
-
-            attempts += 1
-            print(f'Attempt #{attempts}: Could not find {img_path}')
-            time.sleep(0.8)  # Small delay before retrying
-
-        # Raise an exception when the button is not found after 10 attempts
-        raise RuntimeError(f"Failed to find {img_path} after 10 attempts. Program will exit.")
-
-
+    def execute_script(self):
+        # Click on the first 3 images in a row, with 1 second delay between each
+        for x in range(100):
+            self.click_image1()
+            time.sleep(4)
+            self.click_image2()
+            time.sleep(4)
+            self.click_image3()
+            time.sleep(4)
+            # Send Alt + Left Arrow key
             
 
+    def click_image1(self):
+        image_path = "pics/Image1.png"
+        print(f"Looking for {image_path}...")
+        try:
+            location = pyautogui.locateOnScreen(image_path, confidence=self.confidence)
+            if location:
+                x, y = pyautogui.center(location)
+                print(f"Found {image_path} at ({x}, {y}). Moving and clicking.")
+                pyautogui.moveTo(x - 25, y + 34, duration=0.2)
+                pyautogui.click()
+            else:
+                print(f"{image_path} not found on screen.")
+        except pyautogui.FailSafeException:
+            print("PyAutoGUI fail-safe triggered. Exiting.")
+            return
+        except Exception as e:
+            print(f"Error: {e}")
 
+    def click_image2(self):
+        image_path = "pics/Image2.png"
+        print(f"Looking for {image_path}...")
+        try:
+            location = pyautogui.locateOnScreen(image_path, confidence=self.confidence)
+            if location:
+                x, y = pyautogui.center(location)
+                print(f"Found {image_path} at ({x}, {y}). Moving and clicking.")
+                pyautogui.moveTo(x, y, duration=0.2)
+                pyautogui.click()
+            else:
+                print(f"{image_path} not found on screen.")
+        except pyautogui.FailSafeException:
+            print("PyAutoGUI fail-safe triggered. Exiting.")
+            return
+        except Exception as e:
+            print(f"Error: {e}")
 
-        
+    def click_image3(self):
+        image_path = "pics/Image3.png"
+        print(f"Looking for {image_path}...")
+        try:
+            location = pyautogui.locateOnScreen(image_path, confidence=self.confidence)
+            if location:
+                x, y = pyautogui.center(location)
+                print(f"Found {image_path} at ({x}, {y}). Moving and clicking.")
+                pyautogui.moveTo(x, y, duration=0.2)
+                pyautogui.click()
+                time.sleep(4)
+                print("Sending Alt+Left Arrow key...")
+                pyautogui.hotkey('alt', 'left')
+                
+            else:
+                print(f"{image_path} not found on screen.")
+        except pyautogui.FailSafeException:
+            print("PyAutoGUI fail-safe triggered. Exiting.")
+            return
+        except Exception as e:
+            print(f"Error: {e}")
 
+class ImageSaving_Button():
+    def __init__(self, button_label, master, image_name, row=0, column=0):
+        self.image_name = image_name
+        self.master = master
 
+        # Button to save image from clipboard
+        self.button = tk.Button(master, text=button_label, command=self.grab_image)
+        self.button.grid(row=row, column=column, padx=5, pady=5, sticky="ew")
 
+        # Thumbnail label (initially empty)
+        self.thumbnail_label = tk.Label(master)
+        self.thumbnail_label.grid(row=row, column=column+1, padx=5, pady=5)
 
+        # Try to load and display the thumbnail if it exists
+        self.update_thumbnail()
+
+    def grab_image(self):
+        try:
+            image = ImageGrab.grabclipboard()
+            if image is not None:
+                # Ensure the pics directory exists
+                os.makedirs("pics", exist_ok=True)
+                image.save("pics/" + self.image_name, "PNG")
+                print("Image saved successfully.")
+                self.update_thumbnail()
+            else:
+                print("No image found in clipboard. Please copy an image first.")
+        except Exception as e:
+            print(f"Error: {e}. Please ensure the path exists and is accessible.")
+
+    def update_thumbnail(self):
+        image_path = "pics/" + self.image_name
+        if os.path.exists(image_path):
+            try:
+                img = Image.open(image_path)
+                img.thumbnail((70, 70))
+                self.tk_img = ImageTk.PhotoImage(img)
+                self.thumbnail_label.config(image=self.tk_img)
+                self.thumbnail_label.image = self.tk_img  # Prevent garbage collection
+            except Exception as e:
+                self.thumbnail_label.config(image='', text="Err")
+        else:
+            self.thumbnail_label.config(image='', text="")
 
 if __name__ == "__main__":
-    Window().mainloop()
+    app = POItemSelectorApp()
