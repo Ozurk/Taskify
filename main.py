@@ -6,8 +6,8 @@ import os
 
 class POItemSelectorApp:
 
-    sleep_time = 0.1
-    confidence = .79
+    sleep_time = 0.4
+    confidence = .75
 
     def __init__(self):
         self.root = tk.Tk()
@@ -89,14 +89,43 @@ class POItemSelectorApp:
 
     def execute_script(self):
         # Click on the first 3 images in a row, with 1 second delay between each
-        for x in range(100):
+        for x in range(300):
             self.click_image1()
-            time.sleep(4)
+            time.sleep(self.sleep_time)
+
             self.click_image2()
-            time.sleep(4)
+            time.sleep(self.sleep_time)
+
             self.click_image3()
-            time.sleep(4)
-            # Send Alt + Left Arrow key
+            time.sleep(self.sleep_time)
+
+            pyautogui.moveRel(0, 35, duration=0.5)
+            time.sleep(1)
+
+            pyautogui.click()
+
+            pyautogui.press('backspace', presses=5)
+            time.sleep(self.sleep_time)
+            
+            pyautogui.typewrite("0")
+            pyautogui.press('enter')
+            time.sleep(self.sleep_time)
+
+
+       
+            self.click_image4()
+            time.sleep(self.sleep_time)
+            time.sleep(3)
+
+            #self.click_image5()
+            #time.sleep(self.sleep_time)
+
+            #self.click_image6()
+            #time.sleep(self.sleep_time)
+
+            #self.click_image7()
+            #time.sleep(self.sleep_time)
+            
             
 
     def click_image1(self):
@@ -107,13 +136,13 @@ class POItemSelectorApp:
             if location:
                 x, y = pyautogui.center(location)
                 print(f"Found {image_path} at ({x}, {y}). Moving and clicking.")
-                pyautogui.moveTo(x - 25, y + 34, duration=0.2)
+                pyautogui.moveTo(x , y, duration=0.5)
                 pyautogui.click()
             else:
                 print(f"{image_path} not found on screen.")
         except pyautogui.FailSafeException:
             print("PyAutoGUI fail-safe triggered. Exiting.")
-            return
+            quit()
         except Exception as e:
             print(f"Error: {e}")
 
@@ -125,13 +154,13 @@ class POItemSelectorApp:
             if location:
                 x, y = pyautogui.center(location)
                 print(f"Found {image_path} at ({x}, {y}). Moving and clicking.")
-                pyautogui.moveTo(x, y, duration=0.2)
+                pyautogui.moveTo(x, y, duration=0.5)
                 pyautogui.click()
             else:
                 print(f"{image_path} not found on screen.")
         except pyautogui.FailSafeException:
             print("PyAutoGUI fail-safe triggered. Exiting.")
-            return
+            quit()
         except Exception as e:
             print(f"Error: {e}")
 
@@ -143,19 +172,92 @@ class POItemSelectorApp:
             if location:
                 x, y = pyautogui.center(location)
                 print(f"Found {image_path} at ({x}, {y}). Moving and clicking.")
-                pyautogui.moveTo(x, y, duration=0.2)
+                pyautogui.moveTo(x, y, duration=0.5)
                 pyautogui.click()
-                time.sleep(4)
-                print("Sending Alt+Left Arrow key...")
-                pyautogui.hotkey('alt', 'left')
+                time.sleep(self.sleep_time)
+                
                 
             else:
                 print(f"{image_path} not found on screen.")
         except pyautogui.FailSafeException:
             print("PyAutoGUI fail-safe triggered. Exiting.")
-            return
+            quit()
         except Exception as e:
             print(f"Error: {e}")
+    
+    def click_image4(self):
+        image_path = "pics/Image4.png"
+        print(f"Looking for {image_path}...")
+        try:
+            location = pyautogui.locateOnScreen(image_path, confidence=self.confidence)
+            if location:
+                x, y = pyautogui.center(location)
+                print(f"Found {image_path} at ({x}, {y}). Moving and clicking.")
+                pyautogui.moveTo(x, y, duration=0.5)
+                pyautogui.click()
+            else:
+                print(f"{image_path} not found on screen.")
+        except pyautogui.FailSafeException:
+            print("PyAutoGUI fail-safe triggered. Exiting.")
+            quit()
+        except Exception as e:
+            print(f"Error: {e}")
+    
+    def click_image5(self):
+        image_path = "pics/Image5.png"
+        print(f"Looking for {image_path}...")
+        try:
+            location = pyautogui.locateOnScreen(image_path, confidence=self.confidence)
+            if location:
+                x, y = pyautogui.center(location)
+                print(f"Found {image_path} at ({x}, {y}). Moving and clicking.")
+                pyautogui.moveTo(x, y, duration=0.5)
+                pyautogui.click()
+            else:
+                print(f"{image_path} not found on screen.")
+        except pyautogui.FailSafeException:
+            print("PyAutoGUI fail-safe triggered. Exiting.")
+            quit()
+        except Exception as e:
+            print(f"Error: {e}")
+        
+    def click_image6(self):
+        image_path = "pics/Image6.png"
+        print(f"Looking for {image_path}...")
+        try:
+            location = pyautogui.locateOnScreen(image_path, confidence=self.confidence)
+            if location:
+                x, y = pyautogui.center(location)
+                print(f"Found {image_path} at ({x}, {y}). Moving and clicking.")
+                pyautogui.moveTo(x, y, duration=0.5)
+                pyautogui.click()
+            else:
+                print(f"{image_path} not found on screen.")
+        except pyautogui.FailSafeException:
+            print("PyAutoGUI fail-safe triggered. Exiting.")
+            quit()
+        except Exception as e:
+            print(f"Error: {e}")
+        
+    def click_image7(self):
+        image_path = "pics/Image7.png"
+        print(f"Looking for {image_path}...")
+        try:
+            location = pyautogui.locateOnScreen(image_path, confidence=self.confidence)
+            if location:
+                x, y = pyautogui.center(location)
+                print(f"Found {image_path} at ({x}, {y}). Moving and clicking.")
+                pyautogui.moveTo(x, y, duration=0.5)
+                pyautogui.click()
+            else:
+                print(f"{image_path} not found on screen.")
+        except pyautogui.FailSafeException:
+            print("PyAutoGUI fail-safe triggered. Exiting.")
+            quit()
+        except Exception as e:
+            print(f"Error: {e}")
+    
+
 
 class ImageSaving_Button():
     def __init__(self, button_label, master, image_name, row=0, column=0):
