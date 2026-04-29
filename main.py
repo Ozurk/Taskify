@@ -22,7 +22,7 @@ class POItemSelectorApp:
 
         # Number of buttons slider
         tk.Label(settings_frame, text="Number of Save Image Buttons").pack(pady=(10, 0))
-        self.button_count_var = tk.IntVar(value=4)
+        self.button_count_var = tk.IntVar(value=6)
         button_count_slider = tk.Scale(
             settings_frame, from_=1, to=10, orient=tk.HORIZONTAL,
             variable=self.button_count_var, command=self.on_button_count_change
@@ -89,42 +89,44 @@ class POItemSelectorApp:
 
     def execute_script(self):
         # Click on the first 3 images in a row, with 1 second delay between each
-        for x in range(300):
-            self.click_image1()
-            time.sleep(self.sleep_time)
-
+        for x in range(3000):
+            # STEP1
+            self.move_to_image("Image1.png")
+            pyautogui.moveRel(-18, 50, duration=0.5)
+            pyautogui.click()
+            time.sleep(.5)
+            # STEP 2
             self.click_image2()
-            time.sleep(self.sleep_time)
-
-            self.click_image3()
-            time.sleep(self.sleep_time)
-
-            pyautogui.moveRel(0, 35, duration=0.5)
+            time.sleep(.5)
+            # Step 3
+            self.move_to_image("Image3.png")
+            pyautogui.moveRel(0, 50, duration=0.5)
+            pyautogui.click()
             time.sleep(1)
 
+            pyautogui.hotkey('ctrl', 'a')
+            pyautogui.hotkey('ctrl', 'x')
+
+            #Step 4
+            pyautogui.scroll(-100)
+            self.move_to_image("Image4.png")
+            pyautogui.moveRel(0, 50, duration=0.5)
             pyautogui.click()
+            time.sleep(.5)
+            # step 5
+            pyautogui.hotkey('ctrl', 'a')
+            pyautogui.hotkey("backspace")
+            pyautogui.hotkey('ctrl', 'v')
+            time.sleep(.5)
+            pyautogui.scroll(1000)
 
-            pyautogui.press('backspace', presses=5)
-            time.sleep(self.sleep_time)
-            
-            pyautogui.typewrite("0")
-            pyautogui.press('enter')
-            time.sleep(self.sleep_time)
+            # Step 6
+            self.click_image5()
+            time.sleep(.5)
 
-
-       
-            self.click_image4()
-            time.sleep(self.sleep_time)
-            time.sleep(3)
-
-            #self.click_image5()
-            #time.sleep(self.sleep_time)
-
-            #self.click_image6()
-            #time.sleep(self.sleep_time)
-
-            #self.click_image7()
-            #time.sleep(self.sleep_time)
+            # Step 7
+            self.click_image6()
+            time.sleep(6)
             
             
 
@@ -249,6 +251,23 @@ class POItemSelectorApp:
                 print(f"Found {image_path} at ({x}, {y}). Moving and clicking.")
                 pyautogui.moveTo(x, y, duration=0.5)
                 pyautogui.click()
+            else:
+                print(f"{image_path} not found on screen.")
+        except pyautogui.FailSafeException:
+            print("PyAutoGUI fail-safe triggered. Exiting.")
+            quit()
+        except Exception as e:
+            print(f"Error: {e}")
+    
+    def move_to_image(self, image_name):
+        image_path = "pics/" + image_name
+        print(f"Looking for {image_path}...")
+        try:
+            location = pyautogui.locateOnScreen(image_path, confidence=self.confidence)
+            if location:
+                x, y = pyautogui.center(location)
+                print(f"Found {image_path} at ({x}, {y}). Moving.")
+                pyautogui.moveTo(x, y, duration=0.5)
             else:
                 print(f"{image_path} not found on screen.")
         except pyautogui.FailSafeException:
